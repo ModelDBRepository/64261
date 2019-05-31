@@ -1,0 +1,49 @@
+
+objref g1, g2
+
+proc setup_weight_plot() {
+  objref g1, g2
+  strdef colourname
+  g1 = new Graph(0)
+  g2 = new Graph(0)
+  
+  // Make colourmap
+  for i = 4,99 {
+    sprint(colourname,"gray%d",i)
+    g1.color(i,colourname)
+  }
+
+  width = 300
+  height = width
+  square_size = width/ncells
+  
+  g1.view(0,0, (ncells-1)*square_size, (ncells-1)*square_size, 100,100, width, height)
+  g1.xaxis(3)
+
+  
+  
+  g2.view(0,0,tstop,wmax,100,500,500,300)
+}
+
+proc plot_weights() { local i,j
+  g1.erase_all()
+  for i = 0,ncells-1 {
+    for j = 0,ncells-1 {
+      w = $o1.nc[j][i].weight
+      colour = int(w/wmax*96)+4
+      g1.mark(i*square_size,j*square_size,"S",square_size,colour,0)
+    }
+  }
+  j1 = int(0.25*ncells)  i1 = int(ncells/2)
+  j2 = int(ncells/2)     i2 = int(ncells/2)
+  j3 = int(ncells/2)     i3 = int(0.66*ncells)
+  g1.mark(i1*square_size,j1*square_size,"o",1.5*square_size,2,0)
+  g1.mark(i2*square_size,j2*square_size,"o",1.5*square_size,1,0)
+  g1.mark(i3*square_size,j3*square_size,"o",1.5*square_size,3,0)
+  g1.flush()
+  g2.mark(t,$o1.nc[j1][i1].weight,"O",2,2,0)
+  g2.mark(t,$o1.nc[j2][i2].weight,"O",2,1,0)
+  g2.mark(t,$o1.nc[j3][i3].weight,"O",2,3,0)
+  doEvents()
+}
+

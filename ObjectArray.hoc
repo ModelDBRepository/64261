@@ -1,0 +1,110 @@
+// Template for ObjectArray class.
+// This class encapsulates an n-dimensional
+// array of Objects as an Object itself, so
+// that it can be passed as the argument of a
+// procedure.
+// Syntax:
+//     objref oa, size
+//     size = new Vector(3)
+//     size.x[0] = 2
+//     size.x[1] = 3
+//     size.x[2] = 2
+//     oa = new ObjectArray(size,"Vector","10")
+// creates a 2 x 3 x 2 array of Vectors, each of size 10.
+// The Vectors can be addressed as follows, e.g. the
+// value of the third element in the Vector in the 1st row
+// and 1st column of the 1st slice is:
+//     oa.x[0][0][0].x[3]
+// The size of the array and the type of object cannot be
+// changed after creation.
+
+// Alternative syntax for arrays with equal sizes in all dimensions
+//     objref oa
+//     oa new ObjectArray(4,6,"Vector","10")
+// creates a 6 x 6 x 6 x 6 array of Vectors.
+// First argument is number of dimensions, second argument is size of
+// each dimension
+
+begintemplate ObjectArray
+  public x, set, call, tcall, dimensions, size
+  objref x, this, sizes
+  strdef command, itr, itrlist, foreach
+  create dummy_section
+  
+  proc init() { local i
+    i0=i1=i2=i3=i4=i5=i6=0
+    create dummy_section
+    access dummy_section
+
+    if (numarg() == 3) {
+      sizes = $o1
+      m = sizes.size()
+    }
+    if (numarg() == 4) {
+      m = $1
+      sizes = new Vector(m)
+      for i = 0,m-1 {
+	sizes.x[i] = $2*1.0
+      }
+    }
+    sprint(command,"objref x")
+    for i = 0, m-1 {
+      sprint(command,"%s[%d]",command,sizes.x[i])
+    }
+    result = execute1(command,this)
+    command = ""
+    itrlist = ""
+    foreach = ""
+    for i = 0,m-1 {
+      sprint(itr,"i%d",i)
+      sprint(foreach,"%s for %s = 0,%d ",foreach,itr,sizes.x[i]-1)
+      sprint(command,"%s for %s = 0,%d \{ ",command,itr,sizes.x[i]-1)
+      sprint(itrlist,"%s[%s]",itrlist,itr)
+    }
+    if (numarg() == 3) {
+      sprint(command,"%s x%s = new %s(%s)",command,itrlist,$s2,$s3)
+    }
+    if (numarg() == 4) {
+      sprint(command,"%s x%s = new %s(%s)",command,itrlist,$s3,$s4)
+    }
+    for i = 0,m-1 {
+      sprint(command,"%s \}",command)
+    }
+    result = execute1(command,this)
+  }
+  
+  func dimensions() {
+    return m
+  }
+  
+  func size() {
+    //if called without an argument, return the size
+    // of the first dimension, otherwise, return the
+    // size of the dimension with index $1.
+    if (numarg() == 0) {
+      return sizes.x[0]
+    } else {
+      return sizes.x[$1]
+    }
+  }
+  
+  proc set() {
+    sprint(command,"%s { x%s.%s = %g }",foreach,itrlist,$s1,$2)
+    execute1(command,this)
+  }
+  
+  
+  proc call() {
+    sprint(command,"%s { x%s.%s(%s) }",foreach,itrlist,$s1,$s2)
+    execute1(command,this)
+  }
+  
+  proc tcall() {
+    sprint(command,"%s { x%s.%s(%s.x%s) }",foreach,itrlist,$s1,$s2,itrlist)
+    execute1(command,this)
+  }
+  
+  
+  
+endtemplate ObjectArray
+
